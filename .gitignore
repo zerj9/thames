@@ -1,0 +1,6 @@
+/target
+
+*.ipynb
+.ipynb_checkpoints
+
+*.bak

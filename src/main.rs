@@ -1,8 +1,5 @@
 use anyhow::{Context, Result};
-
-use thames::Client;
-use thames::OutgoingMsgId;
-
+use thames::{Client, OutgoingMsgId};
 use tokio::time::{sleep, Duration};
 
 #[tokio::main]
@@ -18,10 +15,15 @@ async fn main() -> Result<()> {
         .send_message(vec![
             OutgoingMsgId::ReqAccountSummary.as_ref(),
             "0",
-            "4",
+            "1", //TODO: Req ID
             "All",
             "AccountType,NetLiquidation,TotalCashValue",
         ])
+        .await?;
+
+    sleep(Duration::from_secs(3)).await;
+    client
+        .send_message(vec![OutgoingMsgId::ReqIds.as_ref(), "2", "-1"])
         .await?;
 
     // Empty loop to keep the program running

@@ -1,17 +1,28 @@
-use crate::incoming::IncomingMsgId;
+use crate::incoming::{IncomingMsgId, MessageHandler};
 use anyhow::{Context, Result};
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::time::{sleep, Duration};
 
+pub struct DefaultMessageHandler;
+impl MessageHandler for DefaultMessageHandler {}
+
 pub struct Client {
     reader: Arc<tokio::sync::Mutex<tokio::io::ReadHalf<TcpStream>>>,
     writer: Arc<tokio::sync::Mutex<tokio::io::WriteHalf<TcpStream>>>,
+    message_handler: Arc<dyn MessageHandler>,
 }
 
 impl Client {
     pub async fn new(address: &str) -> Result<Self> {
+        Self::new_with_handler(address, DefaultMessageHandler).await
+    }
+
+    pub async fn new_with_handler<H: MessageHandler + 'static>(
+        address: &str,
+        handler: H,
+    ) -> Result<Self> {
         let stream = TcpStream::connect(address)
             .await
             .context("Failed to connect to TWS")?;
@@ -19,6 +30,7 @@ impl Client {
         Ok(Self {
             reader: Arc::new(tokio::sync::Mutex::new(reader)),
             writer: Arc::new(tokio::sync::Mutex::new(writer)),
+            message_handler: Arc::new(handler),
         })
     }
 
@@ -83,14 +95,19 @@ impl Client {
         Ok(())
     }
 
-    async fn start_reader(&self) -> Result<()> {
+    pub async fn start_reader(&self) -> Result<()> {
         let reader = self.reader.clone();
+        let message_handler = self.message_handler.clone();
         tokio::spawn(async move {
             loop {
                 let mut reader_guard = reader.lock().await;
                 match Self::read_message(&mut *reader_guard).await {
                     Ok(parts) => {
-                        Self::print_message_parts(&parts);
+                        let parts_slice: Vec<&str> = parts.iter().map(AsRef::as_ref).collect();
+                        if let Err(e) = message_handler.handle_message(parts_slice) {
+                            eprintln!("Error handling message: {}", e);
+                            Self::print_message_parts(&parts);
+                        }
                     }
                     Err(e) => {
                         eprintln!("Error reading message: {}", e);

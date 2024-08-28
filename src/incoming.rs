@@ -1,3 +1,5 @@
+use crate::MessageProcessor;
+use anyhow::Result;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -191,3 +193,72 @@ impl std::fmt::Display for ParseIncomingMsgIdError {
 }
 
 impl std::error::Error for ParseIncomingMsgIdError {}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AccountSummary {
+    pub req_id: i32,
+    pub account: String,
+    pub tag: AccountSummaryTag,
+    pub value: String,
+    pub currency: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AccountSummaryTag {
+    AccountType,
+    NetLiquidation,
+    TotalCashValue,
+    SettledCash,
+    AccruedCash,
+    BuyingPower,
+    EquityWithLoanValue,
+    PreviousEquityWithLoanValue,
+    GrossPositionValue,
+    RegTEquity,
+    RegTMargin,
+    SMA,
+    InitMarginReq,
+    MaintMarginReq,
+    AvailableFunds,
+    ExcessLiquidity,
+    Cushion,
+    FullInitMarginReq,
+    FullMaintMarginReq,
+    FullAvailableFunds,
+    FullExcessLiquidity,
+    LookAheadNextChangeTime,
+    LookAheadInitMarginReq,
+    LookAheadMaintMarginReq,
+    LookAheadAvailableFunds,
+    LookAheadExcessLiquidity,
+    HighestSeverity,
+    DayTradesRemaining,
+    Leverage,
+    Ledger,
+    LedgerCurrency(String),
+    LedgerAll,
+}
+
+pub trait MessageHandler: Send + Sync {
+    fn account_summary(&self, account_summary: AccountSummary) -> Result<()> {
+        println!("{account_summary:?}");
+        Ok(())
+    }
+
+    fn handle_message(&self, parts: Vec<&str>) -> Result<()> {
+        let msg_id: IncomingMsgId = parts[0]
+            .parse()
+            .map_err(|e| anyhow::anyhow!("Failed to parse message ID: {}", e))?;
+
+        match msg_id {
+            IncomingMsgId::AccountSummary => {
+                let summary = MessageProcessor::parse_account_summary(&parts[1..])?;
+                self.account_summary(summary)
+            }
+            _ => {
+                println!("Received message: {:?}, parts: {:?}", msg_id, parts);
+                Ok(())
+            }
+        }
+    }
+}

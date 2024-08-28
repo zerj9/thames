@@ -213,11 +213,35 @@ pub enum OutgoingAccountSummaryTag {
     LedgerAll,
 }
 
+#[derive(EnumString, Display)]
+#[strum(serialize_all = "lowercase")]
+pub enum BoolStr {
+    #[strum(serialize = "0")]
+    False,
+    #[strum(serialize = "1")]
+    True,
+}
+
 #[derive(Debug)]
 pub struct ReqAccountSummary {
     pub req_id: u64,
     pub group: String,
     pub tags: Vec<OutgoingAccountSummaryTag>,
+}
+
+impl ReqAccountUpdates {
+    pub fn subscribe_str(&self) -> &'static str {
+        if self.subscribe {
+            "1"
+        } else {
+            "0"
+        }
+    }
+}
+
+pub struct ReqAccountUpdates {
+    pub subscribe: bool,
+    pub acct_code: String,
 }
 
 impl Client {
@@ -245,8 +269,19 @@ impl Client {
     pub async fn cancel_account_summary(&self, req_id: u64) -> Result<()> {
         self.send_message(vec![
             OutgoingMsgId::CancelAccountSummary.as_ref(),
-            "1",
+            "1", // TODO: message version
             &req_id.to_string(),
+        ])
+        .await?;
+        Ok(())
+    }
+
+    pub async fn req_account_updates(&self, input: ReqAccountUpdates) -> Result<()> {
+        self.send_message(vec![
+            OutgoingMsgId::ReqAcctData.as_ref(),
+            "2", // TODO: message version
+            if input.subscribe { "1" } else { "0" },
+            &input.acct_code,
         ])
         .await?;
         Ok(())

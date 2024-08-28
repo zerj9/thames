@@ -1,4 +1,7 @@
-use crate::incoming::{AccountSummary, AccountSummaryTag};
+use crate::{
+    incoming::{AccountSummary, AccountSummaryTag},
+    AccountUpdateTime, AccountValue,
+};
 use anyhow::Result;
 pub(crate) struct MessageProcessor;
 
@@ -52,6 +55,27 @@ impl MessageProcessor {
             tag: parts[3].into(),
             value: parts[4].to_string(),
             currency: parts.get(5).map(|&s| s.to_string()),
+        })
+    }
+
+    pub(crate) fn parse_account_update_time(parts: &[&str]) -> Result<AccountUpdateTime> {
+        Ok(AccountUpdateTime {
+            timestamp: parts[1].to_string(),
+        })
+    }
+
+    pub(crate) fn parse_account_value(parts: &[&str]) -> Result<AccountValue> {
+        let len = parts.len();
+
+        Ok(AccountValue {
+            key: parts[1].to_string(),
+            value: parts[2].to_string(),
+            currency: if len == 5 {
+                Some(parts[3].to_string())
+            } else {
+                None
+            },
+            account: parts[len - 1].to_string(),
         })
     }
 }

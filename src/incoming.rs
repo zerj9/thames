@@ -239,9 +239,32 @@ pub enum AccountSummaryTag {
     LedgerAll,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct AccountUpdateTime {
+    pub timestamp: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AccountValue {
+    pub key: String,
+    pub value: String,
+    pub currency: Option<String>,
+    pub account: String,
+}
+
 pub trait MessageHandler: Send + Sync {
     fn account_summary(&self, account_summary: AccountSummary) -> Result<()> {
         println!("{account_summary:?}");
+        Ok(())
+    }
+
+    fn account_update_time(&self, account_update_time: AccountUpdateTime) -> Result<()> {
+        println!("{account_update_time:?}");
+        Ok(())
+    }
+
+    fn account_value(&self, account_value: AccountValue) -> Result<()> {
+        println!("{account_value:?}");
         Ok(())
     }
 
@@ -254,6 +277,14 @@ pub trait MessageHandler: Send + Sync {
             IncomingMsgId::AccountSummary => {
                 let summary = MessageProcessor::parse_account_summary(&parts[1..])?;
                 self.account_summary(summary)
+            }
+            IncomingMsgId::AcctUpdateTime => {
+                let update_time = MessageProcessor::parse_account_update_time(&parts[1..])?;
+                self.account_update_time(update_time)
+            }
+            IncomingMsgId::AcctValue => {
+                let value = MessageProcessor::parse_account_value(&parts[1..])?;
+                self.account_value(value)
             }
             _ => {
                 println!("Received message: {:?}, parts: {:?}", msg_id, parts);

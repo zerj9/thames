@@ -7,18 +7,18 @@ pub enum IncomingMsgId {
     TickPrice = 1,
     TickSize = 2,
     OrderStatus = 3,
-    ErrMsg = 4,
+    ErrorMsg = 4,
     OpenOrder = 5,
-    AcctValue = 6,
+    AccountValue = 6,
     PortfolioValue = 7,
-    AcctUpdateTime = 8,
+    AccountUpdateTime = 8,
     NextValidId = 9,
     ContractData = 10,
     ExecutionData = 11,
     MarketDepth = 12,
     MarketDepthL2 = 13,
     NewsBulletins = 14,
-    ManagedAccts = 15,
+    ManagedAccounts = 15,
     ReceiveFa = 16,
     HistoricalData = 17,
     BondContractData = 18,
@@ -33,7 +33,7 @@ pub enum IncomingMsgId {
     FundamentalData = 51,
     ContractDataEnd = 52,
     OpenOrderEnd = 53,
-    AcctDownloadEnd = 54,
+    AccountDownloadEnd = 54,
     ExecutionDataEnd = 55,
     DeltaNeutralValidation = 56,
     TickSnapshotEnd = 57,
@@ -97,18 +97,18 @@ impl FromStr for IncomingMsgId {
                 1 => Ok(Self::TickPrice),
                 2 => Ok(Self::TickSize),
                 3 => Ok(Self::OrderStatus),
-                4 => Ok(Self::ErrMsg),
+                4 => Ok(Self::ErrorMsg),
                 5 => Ok(Self::OpenOrder),
-                6 => Ok(Self::AcctValue),
+                6 => Ok(Self::AccountValue),
                 7 => Ok(Self::PortfolioValue),
-                8 => Ok(Self::AcctUpdateTime),
+                8 => Ok(Self::AccountUpdateTime),
                 9 => Ok(Self::NextValidId),
                 10 => Ok(Self::ContractData),
                 11 => Ok(Self::ExecutionData),
                 12 => Ok(Self::MarketDepth),
                 13 => Ok(Self::MarketDepthL2),
                 14 => Ok(Self::NewsBulletins),
-                15 => Ok(Self::ManagedAccts),
+                15 => Ok(Self::ManagedAccounts),
                 16 => Ok(Self::ReceiveFa),
                 17 => Ok(Self::HistoricalData),
                 18 => Ok(Self::BondContractData),
@@ -123,7 +123,7 @@ impl FromStr for IncomingMsgId {
                 51 => Ok(Self::FundamentalData),
                 52 => Ok(Self::ContractDataEnd),
                 53 => Ok(Self::OpenOrderEnd),
-                54 => Ok(Self::AcctDownloadEnd),
+                54 => Ok(Self::AccountDownloadEnd),
                 55 => Ok(Self::ExecutionDataEnd),
                 56 => Ok(Self::DeltaNeutralValidation),
                 57 => Ok(Self::TickSnapshotEnd),
@@ -195,12 +195,22 @@ impl std::fmt::Display for ParseIncomingMsgIdError {
 impl std::error::Error for ParseIncomingMsgIdError {}
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ManagedAccounts {
+    pub accounts: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct AccountSummary {
     pub req_id: i32,
     pub account: String,
     pub tag: AccountSummaryTag,
     pub value: String,
     pub currency: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AccountSummaryEnd {
+    pub req_id: i32,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -252,9 +262,24 @@ pub struct AccountValue {
     pub account: String,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct AccountDownloadEnd {
+    pub account: String,
+}
+
 pub trait MessageHandler: Send + Sync {
+    fn managed_accounts(&self, message: ManagedAccounts) -> Result<()> {
+        println!("{message:?}");
+        Ok(())
+    }
+
     fn account_summary(&self, account_summary: AccountSummary) -> Result<()> {
         println!("{account_summary:?}");
+        Ok(())
+    }
+
+    fn account_summary_end(&self, account_summary_end: AccountSummaryEnd) -> Result<()> {
+        println!("{account_summary_end:?}");
         Ok(())
     }
 
@@ -268,23 +293,41 @@ pub trait MessageHandler: Send + Sync {
         Ok(())
     }
 
+    fn account_download_end(&self, message: AccountDownloadEnd) -> Result<()> {
+        println!("{message:?}");
+        Ok(())
+    }
+
     fn handle_message(&self, parts: Vec<&str>) -> Result<()> {
         let msg_id: IncomingMsgId = parts[0]
             .parse()
             .map_err(|e| anyhow::anyhow!("Failed to parse message ID: {}", e))?;
 
         match msg_id {
+            IncomingMsgId::ManagedAccounts => {
+                let message = MessageProcessor::parse_managed_accounts(&parts[1..])?;
+                self.managed_accounts(message)
+            }
             IncomingMsgId::AccountSummary => {
-                let summary = MessageProcessor::parse_account_summary(&parts[1..])?;
-                self.account_summary(summary)
+                let message = MessageProcessor::parse_account_summary(&parts[1..])?;
+                self.account_summary(message)
             }
-            IncomingMsgId::AcctUpdateTime => {
-                let update_time = MessageProcessor::parse_account_update_time(&parts[1..])?;
-                self.account_update_time(update_time)
+            IncomingMsgId::AccountSummaryEnd => {
+                let message = MessageProcessor::parse_account_summary_end(&parts[1..])?;
+                self.account_summary_end(message)
             }
-            IncomingMsgId::AcctValue => {
-                let value = MessageProcessor::parse_account_value(&parts[1..])?;
-                self.account_value(value)
+
+            IncomingMsgId::AccountUpdateTime => {
+                let message = MessageProcessor::parse_account_update_time(&parts[1..])?;
+                self.account_update_time(message)
+            }
+            IncomingMsgId::AccountValue => {
+                let message = MessageProcessor::parse_account_value(&parts[1..])?;
+                self.account_value(message)
+            }
+            IncomingMsgId::AccountDownloadEnd => {
+                let message = MessageProcessor::parse_account_download_end(&parts[1..])?;
+                self.account_download_end(message)
             }
             _ => {
                 println!("Received message: {:?}, parts: {:?}", msg_id, parts);

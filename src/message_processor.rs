@@ -1,6 +1,6 @@
 use crate::{
     incoming::{AccountSummary, AccountSummaryTag},
-    AccountUpdateTime, AccountValue,
+    AccountDownloadEnd, AccountSummaryEnd, AccountUpdateTime, AccountValue, ManagedAccounts,
 };
 use anyhow::Result;
 pub(crate) struct MessageProcessor;
@@ -48,6 +48,12 @@ impl From<&str> for AccountSummaryTag {
 }
 
 impl MessageProcessor {
+    pub(crate) fn parse_managed_accounts(parts: &[&str]) -> Result<ManagedAccounts> {
+        Ok(ManagedAccounts {
+            accounts: parts[1].to_string(),
+        })
+    }
+
     pub(crate) fn parse_account_summary(parts: &[&str]) -> Result<AccountSummary> {
         Ok(AccountSummary {
             req_id: parts[1].parse()?,
@@ -55,6 +61,12 @@ impl MessageProcessor {
             tag: parts[3].into(),
             value: parts[4].to_string(),
             currency: parts.get(5).map(|&s| s.to_string()),
+        })
+    }
+
+    pub(crate) fn parse_account_summary_end(parts: &[&str]) -> Result<AccountSummaryEnd> {
+        Ok(AccountSummaryEnd {
+            req_id: parts[1].parse()?,
         })
     }
 
@@ -76,6 +88,12 @@ impl MessageProcessor {
                 None
             },
             account: parts[len - 1].to_string(),
+        })
+    }
+
+    pub(crate) fn parse_account_download_end(parts: &[&str]) -> Result<AccountDownloadEnd> {
+        Ok(AccountDownloadEnd {
+            account: parts[1].to_string(),
         })
     }
 }

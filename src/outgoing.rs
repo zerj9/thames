@@ -221,6 +221,7 @@ pub struct ReqAccountSummary {
 }
 
 impl Client {
+    // https://ibkrcampus.com/campus/ibkr-api-page/twsapi-doc/#requesting-account-summary
     pub async fn req_account_summary(&self, input: ReqAccountSummary) -> Result<()> {
         let req_id = input.req_id;
         let group = input.group;
@@ -235,6 +236,17 @@ impl Client {
                 .map(|tag| tag.to_string())
                 .collect::<Vec<String>>()
                 .join(","),
+        ])
+        .await?;
+        Ok(())
+    }
+
+    // https://www.interactivebrokers.com/campus/ibkr-api-page/twsapi-doc/#cancel-account-summary
+    pub async fn cancel_account_summary(&self, req_id: u64) -> Result<()> {
+        self.send_message(vec![
+            OutgoingMsgId::CancelAccountSummary.as_ref(),
+            "1",
+            &req_id.to_string(),
         ])
         .await?;
         Ok(())

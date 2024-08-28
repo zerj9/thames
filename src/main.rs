@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use thames::{Client, OutgoingMsgId};
+use thames::{Client, OutgoingAccountSummaryTag, ReqAccountSummary};
 use tokio::time::{sleep, Duration};
 
 #[tokio::main]
@@ -10,20 +10,16 @@ async fn main() -> Result<()> {
         .context("Failed to create TwsClient")?;
     client.connect().await?;
 
-    // Request account summary
     client
-        .send_message(vec![
-            OutgoingMsgId::ReqAccountSummary.as_ref(),
-            "0",
-            "1", //TODO: Req ID
-            "All",
-            "AccountType,NetLiquidation,TotalCashValue",
-        ])
-        .await?;
-
-    sleep(Duration::from_secs(3)).await;
-    client
-        .send_message(vec![OutgoingMsgId::ReqIds.as_ref(), "2", "-1"])
+        .req_account_summary(ReqAccountSummary {
+            req_id: 1,
+            group: "All".to_string(),
+            tags: vec![
+                OutgoingAccountSummaryTag::AccountType,
+                OutgoingAccountSummaryTag::TotalCashValue,
+                OutgoingAccountSummaryTag::NetLiquidation,
+            ],
+        })
         .await?;
 
     // Empty loop to keep the program running

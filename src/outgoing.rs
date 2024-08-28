@@ -1,3 +1,9 @@
+//use serde::{Deserialize, Serialize};
+use anyhow::Result;
+use strum_macros::{Display, EnumString};
+
+use crate::Client;
+
 #[allow(dead_code)] // dirty?
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum OutgoingMsgId {
@@ -167,5 +173,70 @@ impl AsRef<str> for OutgoingMsgId {
             Self::CancelWshEventData => "103",
             Self::ReqUserInfo => "104",
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, EnumString, Display)]
+#[strum(serialize_all = "PascalCase")]
+pub enum OutgoingAccountSummaryTag {
+    AccountType,
+    NetLiquidation,
+    TotalCashValue,
+    SettledCash,
+    AccruedCash,
+    BuyingPower,
+    EquityWithLoanValue,
+    PreviousEquityWithLoanValue,
+    GrossPositionValue,
+    RegTEquity,
+    RegTMargin,
+    SMA,
+    InitMarginReq,
+    MaintMarginReq,
+    AvailableFunds,
+    ExcessLiquidity,
+    Cushion,
+    FullInitMarginReq,
+    FullMaintMarginReq,
+    FullAvailableFunds,
+    FullExcessLiquidity,
+    LookAheadNextChange,
+    LookAheadInitMarginReq,
+    LookAheadMaintMarginReq,
+    LookAheadAvailableFunds,
+    LookAheadExcessLiquidity,
+    HighestSeverity,
+    DayTradesRemaining,
+    Leverage,
+    Ledger,
+    LedgerCurrency,
+    LedgerAll,
+}
+
+#[derive(Debug)]
+pub struct ReqAccountSummary {
+    pub req_id: u64,
+    pub group: String,
+    pub tags: Vec<OutgoingAccountSummaryTag>,
+}
+
+impl Client {
+    pub async fn req_account_summary(&self, input: ReqAccountSummary) -> Result<()> {
+        let req_id = input.req_id;
+        let group = input.group;
+        let tags = input.tags;
+        self.send_message(vec![
+            OutgoingMsgId::ReqAccountSummary.as_ref(),
+            "0", // TODO: message version
+            &req_id.to_string(),
+            &group,
+            &tags
+                .iter()
+                .map(|tag| tag.to_string())
+                .collect::<Vec<String>>()
+                .join(","),
+        ])
+        .await?;
+        Ok(())
     }
 }

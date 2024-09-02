@@ -5,6 +5,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::time::{sleep, Duration};
 
+// Defined in the incoming module
 pub struct DefaultMessageHandler;
 impl MessageHandler for DefaultMessageHandler {}
 
@@ -137,7 +138,6 @@ impl Client {
         // Split the message by null bytes and collect into a vector of strings
         let parts: Vec<String> = message
             .split(|&byte| byte == 0)
-            .filter(|&part| !part.is_empty())
             .map(|part| String::from_utf8_lossy(part).into_owned())
             .collect();
 

@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 use crate::{
     AccountDownloadEnd, AccountSummary, AccountSummaryEnd, AccountUpdateTime, AccountValue,
-    ManagedAccounts,
+    ManagedAccounts, PortfolioValue, PositionData, PositionEnd,
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -230,6 +230,21 @@ pub trait MessageHandler: Send + Sync {
         Ok(())
     }
 
+    fn portfolio_value(&self, message: PortfolioValue) -> Result<()> {
+        println!("{message:?}");
+        Ok(())
+    }
+
+    fn position_data(&self, message: PositionData) -> Result<()> {
+        println!("{message:?}");
+        Ok(())
+    }
+
+    fn position_end(&self, message: PositionEnd) -> Result<()> {
+        println!("{message:?}");
+        Ok(())
+    }
+
     fn handle_message(&self, parts: Vec<&str>) -> Result<()> {
         let msg_id: IncomingMsgId = parts[0]
             .parse()
@@ -261,6 +276,19 @@ pub trait MessageHandler: Send + Sync {
                 let message = MessageProcessor::parse_account_download_end(&parts[1..])?;
                 self.account_download_end(message)
             }
+            IncomingMsgId::PortfolioValue => {
+                let message = MessageProcessor::parse_portfolio_update_value(&parts[1..])?;
+                self.portfolio_value(message)
+            }
+            IncomingMsgId::PositionData => {
+                let message = MessageProcessor::parse_position_data(&parts[1..])?;
+                self.position_data(message)
+            }
+            IncomingMsgId::PositionEnd => {
+                let message = MessageProcessor::parse_position_end(&parts[1..])?;
+                self.position_end(message)
+            }
+
             _ => {
                 println!("Received message: {:?}, parts: {:?}", msg_id, parts);
                 Ok(())

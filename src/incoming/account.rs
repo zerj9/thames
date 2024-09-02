@@ -70,3 +70,25 @@ pub struct AccountValue {
 pub struct AccountDownloadEnd {
     pub account: String,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PortfolioValue {
+    pub contract_id: String,
+    pub symbol: String,
+    pub sec_type: String,
+    pub last_trade_date_or_contract_month: String,
+    pub strike: String,
+    pub right: String,
+    pub multiplier: String,
+    pub primary_exchange: String,
+    pub currency: String,
+    pub local_symbol: String,
+    pub trading_class: String,
+    pub position: String,
+    pub market_price: String,
+    pub market_value: String,
+    pub average_cost: String,
+    pub unrealized_pnl: String,
+    pub realized_pnl: String,
+    pub account: String,
+}

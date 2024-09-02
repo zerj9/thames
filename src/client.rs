@@ -1,4 +1,4 @@
-use crate::incoming::{IncomingMsgId, MessageHandler};
+use crate::{IncomingMsgId, MessageHandler};
 use anyhow::{Context, Result};
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -8,6 +8,10 @@ use tokio::time::{sleep, Duration};
 // Defined in the incoming module
 pub struct DefaultMessageHandler;
 impl MessageHandler for DefaultMessageHandler {}
+
+pub trait ToIBKRString {
+    fn to_ibkr_string(&self) -> String;
+}
 
 pub struct Client {
     reader: Arc<tokio::sync::Mutex<tokio::io::ReadHalf<TcpStream>>>,

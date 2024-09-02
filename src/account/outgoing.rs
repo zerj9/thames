@@ -1,44 +1,9 @@
+use super::AccountSummaryTag;
 use crate::{Client, OutgoingMsgId};
 use anyhow::Result;
 use strum_macros::{Display, EnumString};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, EnumString, Display)]
-#[strum(serialize_all = "PascalCase")]
-pub enum OutgoingAccountSummaryTag {
-    AccountType,
-    NetLiquidation,
-    TotalCashValue,
-    SettledCash,
-    AccruedCash,
-    BuyingPower,
-    EquityWithLoanValue,
-    PreviousEquityWithLoanValue,
-    GrossPositionValue,
-    RegTEquity,
-    RegTMargin,
-    SMA,
-    InitMarginReq,
-    MaintMarginReq,
-    AvailableFunds,
-    ExcessLiquidity,
-    Cushion,
-    FullInitMarginReq,
-    FullMaintMarginReq,
-    FullAvailableFunds,
-    FullExcessLiquidity,
-    LookAheadNextChange,
-    LookAheadInitMarginReq,
-    LookAheadMaintMarginReq,
-    LookAheadAvailableFunds,
-    LookAheadExcessLiquidity,
-    HighestSeverity,
-    DayTradesRemaining,
-    Leverage,
-    Ledger,
-    LedgerCurrency,
-    LedgerAll,
-}
-
+// TODO: convert during message sending.
 #[derive(EnumString, Display)]
 #[strum(serialize_all = "lowercase")]
 pub enum BoolStr {
@@ -52,7 +17,7 @@ pub enum BoolStr {
 pub struct ReqAccountSummary {
     pub req_id: u64,
     pub group: String,
-    pub tags: Vec<OutgoingAccountSummaryTag>,
+    pub tags: Vec<AccountSummaryTag>,
 }
 
 impl ReqAccountUpdates {

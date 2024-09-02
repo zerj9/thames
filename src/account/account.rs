@@ -1,0 +1,35 @@
+use strum_macros::{Display, EnumString};
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, EnumString, Display)]
+#[strum(serialize_all = "PascalCase")]
+pub enum AccountSummaryTag {
+    AccountType,
+    NetLiquidation,
+    TotalCashValue,
+    SettledCash,
+    AccruedCash,
+    BuyingPower,
+    EquityWithLoanValue,
+    PreviousEquityWithLoanValue,
+    GrossPositionValue,
+    ReqTEquity,
+    ReqTMargin,
+    SMA,
+    InitMarginReq,
+    MaintMarginReq,
+    AvailableFunds,
+    ExcessLiquidity,
+    Cushion,
+    FullInitMarginReq,
+    FullMaintMarginReq,
+    FullAvailableFunds,
+    FullExcessLiquidity,
+    LookAheadNextChange,
+    LookAheadInitMarginReq,
+    LookAheadMaintMarginReq,
+    LookAheadAvailableFunds,
+    LookAheadExcessLiquidity,
+    HighestSeverity,
+    DayTradesRemaining,
+    Leverage,
+}
